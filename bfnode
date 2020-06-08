@@ -1,0 +1,78 @@
+#!/bin/env python3
+# a brief way to show node info
+# by jtyang 2020/6/8
+import os
+import time
+import re
+username = os.popen('whoami').readline()[:-1]
+tmpfile="/tmp/"+username+"tmpqnodes"
+os.popen("qnodes >"+tmpfile)
+time.sleep(0.1) # give time to write file
+# print(tmpfile)
+finObj=open(tmpfile)
+
+class Node:
+    'just node'
+    def __init__(self,name):
+        self.name= name
+        self.totCore= 28
+        self.usedCore= 0
+        self.pState= "R"
+        self.state=""
+        self.np=""
+    def qNode(self):
+        print(' {:12s}{:>2d}/{:02d}       {:8s}'.format(self.name, self.usedCore, self.totCore, self.pState) )
+
+# get used core number
+def getUsedCore(line):
+    # print(line)
+    nUsedCore=0
+    tmpList=[]
+    words= re.findall(r"[ \,](.+?)/\d+\.master?",line)
+    if "jobs" in line[0:11]:
+        words[0]=words[0][11:]
+        # print(words)
+        # print("its a job line")
+        # get core one by one
+        for i in range(len(words)):
+            if "-"  in words[i]:
+                tmpList= re.findall(r"(\d+)-(\d+)",words[i])
+                for j in range(len(tmpList)):
+                    nUsedCore= nUsedCore+ int(tmpList[0][1])- int(tmpList[0][0])
+            nUsedCore= nUsedCore+ words[i].count(",") +1
+        return nUsedCore
+    else:
+        return nUsedCore
+
+print(" name       used/tot    stat")
+print("--------    --------    ----")
+# analysis the file
+## if node info
+while True:
+    line=finObj.readline()
+    if not line: 
+        break
+    elif line[0:6]== "master" or line[0:4]== "node":
+        # init
+        nTmp= Node(line[0:-1])
+        line= finObj.readline()
+        # state
+        nTmp.state= str.split(line)[2]
+        line= finObj.readline()
+        # power state
+        nTmp.pState= str.split(line)[2][0]
+        if nTmp.pState== 'R' : nTmp.pState= 'r'
+        # tot core
+        line= finObj.readline()
+        nTmp.totCore= int(str.split(line)[2])
+        # ntype
+        line= finObj.readline() # ntype
+        # status or jobs
+        line= finObj.readline()
+
+        ### get usedCore
+        nTmp.usedCore= getUsedCore(line)
+
+        ### show info
+        nTmp.qNode()
+        print("--------    --------    ----")

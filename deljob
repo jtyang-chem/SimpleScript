@@ -1,0 +1,59 @@
+#!/share/apps/miniconda3/bin/python 
+# by jtyang 2021 May 7th
+# revised by jtyang 2021 Oct 23
+import os
+import time
+import re
+import sys
+
+def get_job_list():
+    """ get job list"""
+    username = os.popen('whoami').readline()[:-1]
+    jobStr = os.popen("qstat -u `whoami` ").read()
+    job_list = []
+    lines= re.split('\n', jobStr)
+    for l in lines[5:-1]:
+        w_list = re.split('\s+', l)
+        #if w_list[-2] == 'R':
+        #    job_list.append(w_list[0])
+        job_list.append(w_list[0])
+    
+    return job_list
+
+def get_sele(s):
+    job_list = get_job_list()
+    if len(job_list) == 0:
+        print("no running jobs")
+        exit()
+    # try:
+    if s== ':':
+        return job_list
+    elif s[0] == ':': # ':x'
+        return job_list[:int(s[1:])]
+    elif s[-1] == ':': #'x:'
+        return job_list[int(s[:-1]):]
+    elif ':' in s: # 'a:b'
+        print(s)
+        sele = [0, 0]
+        s_sele = re.split(':',s)
+        sele[0] = int(s_sele[0])
+        sele[1] = int(s_sele[1])
+        return job_list[sele[0]: sele[1]]
+    else: # 'x'
+        a  = int(s)
+        return job_list[a:a+1]
+    # except:
+        # print("wrong python format selected range:", s )
+        # exit()
+
+def del_list(job_list):
+    for j in job_list:
+        stream = os.popen("qdel "+ j)
+        print(stream.read())
+
+def test():
+    print(get_job_list())
+    assert len(sys.argv) == 2, "Pls input a py formatted range to delete( a, a:, :b, a:b )"
+    del_list(get_sele(sys.argv[1]))
+
+test()

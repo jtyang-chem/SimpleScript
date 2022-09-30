@@ -1,8 +1,8 @@
 # SimpleScript
-some little, but useful script in life
+some little, but useful scripts in life
 
 ## bfnode.py
-breif node check script:
+node check script with brief output:
 
 check if the node is working normally,
 including function can get you spare cores, which is usally dealed with job sub controller,

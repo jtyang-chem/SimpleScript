@@ -20,31 +20,26 @@ def get_job_list():
     
     return job_list
 
-def get_sele(s):
-    job_list = get_job_list()
-    if len(job_list) == 0:
-        print("no running jobs")
-        exit()
-    # try:
-    if s== ':':
-        return job_list
-    elif s[0] == ':': # ':x'
-        return job_list[:int(s[1:])]
-    elif s[-1] == ':': #'x:'
-        return job_list[int(s[:-1]):]
-    elif ':' in s: # 'a:b'
-        print(s)
-        sele = [0, 0]
-        s_sele = re.split(':',s)
-        sele[0] = int(s_sele[0])
-        sele[1] = int(s_sele[1])
-        return job_list[sele[0]: sele[1]]
-    else: # 'x'
-        a  = int(s)
-        return job_list[a:a+1]
-    # except:
-        # print("wrong python format selected range:", s )
-        # exit()
+def str2slice(mystring):
+    # https://stackoverflow.com/questions/680826/python-create-slice-object-from-string by pprzemek
+    if not ':' in mystring:
+        res = int(mystring)
+    else:
+        res = slice(*map(lambda x: int(x.strip()) if x.strip() else None, mystring.split(':')))
+    return res
+
+def test_stri2slice():
+    l = [0, 1, 2, 3]
+    x_l = [ "3", ":3", "2:", "1:3", "::2" ]
+    print("""sample:
+3
+[0, 1, 2]
+[2, 3]
+[1, 2]
+[0, 2]""")
+    print("test:")
+    for x in x_l:
+        print(l[str2slice(x)])
 
 def del_list(job_list):
     for j in job_list:
@@ -52,8 +47,10 @@ def del_list(job_list):
         print(stream.read())
 
 def test():
-    print(get_job_list())
+    job_list = get_job_list()
+    print(job_list)
     assert len(sys.argv) == 2, "Pls input a py formatted range to delete( a, a:, :b, a:b )"
-    del_list(get_sele(sys.argv[1]))
+    del_list(job_list[str2slice(sys.argv[1])] )
 
 test()
+# test_stri2slice()
